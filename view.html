@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DemiEssence - Checkout</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="header">
+                <div class="logo">
+                    <h1>DemiEssence</h1>
+                    <p>Complete your order</p>
+                </div>
+            </header>
+
+            <!-- Loading State -->
+            <section id="loadingSection" class="loading-section">
+                <div class="loading-spinner"></div>
+                <p>Loading your order details...</p>
+            </section>
+
+            <!-- Error State -->
+            <section id="errorSection" class="error-section hidden">
+                <div class="error-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <h2>Invalid or Expired Link</h2>
+                <p id="errorMessage">This checkout link is no longer valid. Please contact DemiEssence for a new link.</p>
+            </section>
+
+            <!-- Checkout Section -->
+            <section id="checkoutSection" class="checkout-section hidden">
+                <!-- Order Summary -->
+                <div class="order-summary">
+                    <h2>Order Summary</h2>
+                    
+                    <div class="summary-row">
+                        <span class="label">Order Number</span>
+                        <span class="value" id="orderId"></span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span class="label">Customer</span>
+                        <span class="value" id="customerName"></span>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="product-details">
+                        <div class="product-info">
+                            <h3 id="itemName"></h3>
+                            <p id="itemSpecs"></p>
+                        </div>
+                        <div class="product-price" id="itemPrice"></div>
+                    </div>
+
+                    <div class="summary-row">
+                        <span class="label">Shipping to <span id="country"></span></span>
+                        <span class="value" id="shippingCost"></span>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="summary-row total">
+                        <span class="label">Total</span>
+                        <span class="value" id="totalAmount"></span>
+                    </div>
+
+                    <div id="notesSection" class="notes-section hidden">
+                        <p class="notes-label">Special Instructions:</p>
+                        <p class="notes-content" id="notesContent"></p>
+                    </div>
+                </div>
+
+                            <!-- Payment Section -->
+                <div class="payment-section">
+                    <h2>Payment Instructions</h2>
+                    <p class="payment-intro">Complete your payment using the bank details below:</p>
+                
+                    <!-- Nigerian Bank Transfer (shown only if currency = NGN) -->
+                    <div id="ngnPayment" class="payment-method hidden">
+                        <h3>🇳🇬 Nigerian Bank Transfer</h3>
+                        <div class="bank-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Bank Name</span>
+                                <span class="detail-value">GTBank</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Account Number</span>
+                                <span class="detail-value copyable" onclick="copyText('0123456789')">
+                                    0123456789
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Account Name</span>
+                                <span class="detail-value">DemiEssence Limited</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Amount</span>
+                                <span class="detail-value" id="amountNGN"></span>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- International Payment (shown for USD, GBP, EUR) -->
+                    <div id="intlPayment" class="payment-method hidden">
+                        <!-- USD -->
+                        <div id="usdSection" class="bank-section hidden">
+                            <h3>🇺🇸 USD Bank Transfer (Wise)</h3>
+                            <div class="bank-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Account Name</span>
+                                    <span class="detail-value">DemiEssence Fashion</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Account Number</span>
+                                    <span class="detail-value copyable" onclick="copyText('8310000000')">
+                                        8310000000
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Routing Number</span>
+                                    <span class="detail-value copyable" onclick="copyText('026073150')">
+                                        026073150
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Bank</span>
+                                    <span class="detail-value">Community Federal Savings Bank</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Amount</span>
+                                    <span class="detail-value" id="amountUSD"></span>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- GBP -->
+                        <div id="gbpSection" class="bank-section hidden">
+                            <h3>🇬🇧 GBP Bank Transfer (Wise)</h3>
+                            <div class="bank-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Account Name</span>
+                                    <span class="detail-value">DemiEssence Fashion</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Account Number</span>
+                                    <span class="detail-value copyable" onclick="copyText('12345678')">
+                                        12345678
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Sort Code</span>
+                                    <span class="detail-value copyable" onclick="copyText('23-14-70')">
+                                        23-14-70
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Amount</span>
+                                    <span class="detail-value" id="amountGBP"></span>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- EUR -->
+                        <div id="eurSection" class="bank-section hidden">
+                            <h3>🇪🇺 EUR Bank Transfer (Wise)</h3>
+                            <div class="bank-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Account Name</span>
+                                    <span class="detail-value">DemiEssence Fashion</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">IBAN</span>
+                                    <span class="detail-value copyable" onclick="copyText('DE89370400440532013000')">
+                                        DE89370400440532013000
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">BIC</span>
+                                    <span class="detail-value copyable" onclick="copyText('COBADEFFXXX')">
+                                        COBADEFFXXX
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Amount</span>
+                                    <span class="detail-value" id="amountEUR"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="payment-footer">
+                        <p><strong>After payment:</strong> Send your receipt to our WhatsApp: <a href="https://wa.me/2348000000000">+234 800 000 0000</a></p>
+                        <p>Include your order number: <strong id="orderIdFooter"></strong></p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="assets/js/viewer.js"></script>
+</body>
+</html>
