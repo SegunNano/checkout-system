@@ -6,11 +6,13 @@
 const CONFIG = {
     VA_PASSWORD: 'demi2026admin',
     SECRET_KEY: 'DemiEssence2026SecretKey!@#',
-    POLICY_URL: 'https://segunnano.github.io/checkout-system/policy.html'
+    POLICY_URL: 'https://segunnano.github.io/checkout-system/policy.html',
+    LINK_EXPIRY_MINUTES: 5
 };
 
 // State
 let currentCheckoutUrl = '';
+let itemCounter = 1;
 
 // =============================================
 // Authentication
@@ -31,29 +33,131 @@ function authenticate() {
 }
 
 // =============================================
+// Item Management
+// =============================================
+
+function addItemRow() {
+    itemCounter++;
+    
+    const container = document.getElementById('itemsContainer');
+    const newRow = document.createElement('div');
+    newRow.className = 'item-row';
+    newRow.setAttribute('data-item-index', itemCounter);
+    
+    newRow.innerHTML = `
+        <div class="item-row-header">
+            <span class="item-row-label">Item ${itemCounter}</span>
+            <button type="button" class="btn-remove-item" onclick="removeItem(${itemCounter})">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Remove
+            </button>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Style</label>
+                <select class="input-field item-style" required>
+                    <option value="">Select style</option>
+                    <option value="Rhena">Rhena</option>
+                    <option value="Rheve">Rheve</option>
+                    <option value="Miel">Miel</option>
+                    <option value="Milani">Milani</option>
+                    <option value="Lunara">Lunara</option>
+                    <option value="Custom-made">Custom-made</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Size</label>
+                <select class="input-field item-size" required>
+                    <option value="">Select size</option>
+                    <option value="6">Size 6</option>
+                    <option value="8">Size 8</option>
+                    <option value="10">Size 10</option>
+                    <option value="12">Size 12</option>
+                    <option value="14">Size 14</option>
+                    <option value="16">Size 16</option>
+                    <option value="18">Size 18</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Quantity</label>
+                <input 
+                    type="number" 
+                    class="input-field item-quantity"
+                    placeholder="1"
+                    min="1"
+                    value="1"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Price (per item)</label>
+                <input 
+                    type="number" 
+                    class="input-field item-price"
+                    placeholder="145.00"
+                    step="0.01"
+                    required
+                >
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Color / Customizations (Optional)</label>
+            <input 
+                type="text" 
+                class="input-field item-customizations"
+                placeholder="e.g., Red fabric, extra length"
+            >
+        </div>
+    `;
+    
+    container.appendChild(newRow);
+    updateRemoveButtons();
+}
+
+function removeItem(index) {
+    const row = document.querySelector(`[data-item-index="${index}"]`);
+    if (row) {
+        row.remove();
+        updateRemoveButtons();
+        renumberItems();
+    }
+}
+
+function updateRemoveButtons() {
+    const rows = document.querySelectorAll('.item-row');
+    rows.forEach((row, index) => {
+        const removeBtn = row.querySelector('.btn-remove-item');
+        if (rows.length === 1) {
+            removeBtn.style.display = 'none';
+        } else {
+            removeBtn.style.display = 'inline-flex';
+        }
+    });
+}
+
+function renumberItems() {
+    const rows = document.querySelectorAll('.item-row');
+    rows.forEach((row, index) => {
+        const label = row.querySelector('.item-row-label');
+        label.textContent = `Item ${index + 1}`;
+    });
+}
+
+// =============================================
 // Form Handling
 // =============================================
 
-// Auto-update price when item is selected
 document.addEventListener('DOMContentLoaded', function() {
-    const itemSelect = document.getElementById('item');
-    const priceInput = document.getElementById('price');
-    
-    if (itemSelect) {
-        itemSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const price = selectedOption.getAttribute('data-price');
-            
-            if (price && price !== '0') {
-                priceInput.value = price;
-            } else {
-                priceInput.value = '';
-                priceInput.focus();
-            }
-        });
-    }
-    
-    // Form submission
     const form = document.getElementById('orderForm');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -62,7 +166,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Enter key on password field
     const passwordField = document.getElementById('accessPassword');
     if (passwordField) {
         passwordField.addEventListener('keypress', function(e) {
@@ -77,46 +180,66 @@ document.addEventListener('DOMContentLoaded', function() {
 // Link Generation
 // =============================================
 
-
 function generateLink() {
-    // Collect form data
+    // Collect items array
+    const items = [];
+    const itemRows = document.querySelectorAll('.item-row');
+    
+    itemRows.forEach((row, index) => {
+        const style = row.querySelector('.item-style').value;
+        const size = row.querySelector('.item-size').value;
+        const quantity = parseInt(row.querySelector('.item-quantity').value);
+        const price = parseFloat(row.querySelector('.item-price').value);
+        const customizations = row.querySelector('.item-customizations').value.trim();
+        
+        if (!style || !size || !quantity || !price) {
+            throw new Error(`Item ${index + 1}: Missing required fields`);
+        }
+        
+        const item = {
+            style: style,
+            size: size,
+            quantity: quantity,
+            price: price
+        };
+        
+        if (customizations) {
+            item.customizations = customizations;
+        }
+        
+        items.push(item);
+    });
+    
+    // Collect order data
     const orderData = {
         orderId: getFieldValue('orderId'),
         customerName: getFieldValue('customerName'),
         customerEmail: getFieldValue('customerEmail'),
-        item: getFieldValue('item'),
-        size: getFieldValue('size'),
-        color: getFieldValue('color'),
         currency: getFieldValue('currency'),
-        price: parseFloat(getFieldValue('price')),
+        items: items,
         shipping: parseFloat(getFieldValue('shipping')),
         country: getFieldValue('country'),
         notes: getFieldValue('notes'),
         timestamp: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + CONFIG.LINK_EXPIRY_MINUTES * 60 * 1000).toISOString(),
         createdBy: 'VA'
     };
     
-    // Validate required fields
     if (!validateOrderData(orderData)) {
         return;
     }
     
-    // Encrypt data
     try {
         const jsonData = JSON.stringify(orderData);
         const encrypted = CryptoJS.AES.encrypt(jsonData, CONFIG.SECRET_KEY).toString();
         const urlSafe = encodeURIComponent(encrypted);
         
-        // Build POLICY URL (not view URL)
-        const checkoutUrl = `${CONFIG.POLICY_URL}?data=${urlSafe}`;  // Changed this line
+        const checkoutUrl = `${CONFIG.POLICY_URL}?data=${urlSafe}`;
         
-        // Display result
         displayResult(checkoutUrl);
-        
-        // Store for preview
         currentCheckoutUrl = checkoutUrl;
         
-        console.log('✓ Checkout link generated successfully');
+        // console.log('✓ Policy link generated successfully');
     } catch (error) {
         console.error('Encryption error:', error);
         showError('Failed to generate link. Please try again.');
@@ -138,27 +261,17 @@ function validateOrderData(data) {
         return false;
     }
     
-    if (!data.item) {
-        showError('Please select an item');
-        return false;
-    }
-    
-    if (!data.size) {
-        showError('Please select a size');
-        return false;
-    }
-
-        if (!data.currency) {  
+    if (!data.currency) {
         showError('Please select a currency');
         return false;
     }
     
-    if (!data.price || isNaN(data.price) || data.price <= 0) {
-        showError('Please enter a valid price');
+    if (!data.items || data.items.length === 0) {
+        showError('At least one item is required');
         return false;
     }
     
-    if (!data.shipping || isNaN(data.shipping) || data.shipping < 0) {
+    if (isNaN(data.shipping) || data.shipping < 0) {
         showError('Please enter a valid shipping amount');
         return false;
     }
@@ -179,7 +292,6 @@ function displayResult(checkoutUrl) {
     document.getElementById('checkoutLink').textContent = checkoutUrl;
     document.getElementById('resultSection').classList.remove('hidden');
     
-    // Scroll to result
     setTimeout(() => {
         document.getElementById('resultSection').scrollIntoView({ 
             behavior: 'smooth',
@@ -219,6 +331,15 @@ function resetForm() {
     document.getElementById('resultSection').classList.add('hidden');
     currentCheckoutUrl = '';
     
+    // Reset to single item
+    const container = document.getElementById('itemsContainer');
+    const allRows = container.querySelectorAll('.item-row');
+    allRows.forEach((row, index) => {
+        if (index > 0) row.remove();
+    });
+    itemCounter = 1;
+    updateRemoveButtons();
+    
     window.scrollTo({
         top: 0,
         behavior: 'smooth'
@@ -230,7 +351,6 @@ function showError(message) {
 }
 
 function showSuccess(message) {
-    // Create temporary success notification
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
@@ -255,7 +375,6 @@ function showSuccess(message) {
     }, 2000);
 }
 
-// Add CSS animations
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
